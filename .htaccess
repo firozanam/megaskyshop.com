@@ -1,0 +1,91 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/nokshino/megaskyshop.com"
+PassengerBaseURI "/"
+PassengerNodejs "/home/nokshino/nodevenv/megaskyshop.com/20/bin/node"
+PassengerAppType node
+PassengerStartupFile server.js
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
+
+# Next.js Configuration
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect www to non-www
+    RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+    RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+    
+    # Force HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Handle Next.js static files
+    RewriteCond %{REQUEST_URI} ^/_next/static/
+    RewriteRule ^_next/static/(.*)$ /_next/static/$1 [L]
+
+    # Handle Next.js data files
+    RewriteCond %{REQUEST_URI} ^/_next/data/
+    RewriteRule ^_next/data/(.*)$ /_next/data/$1 [L]
+
+    # Handle Next.js image optimization API
+    RewriteCond %{REQUEST_URI} ^/_next/image
+    RewriteRule ^_next/image(.*)$ /_next/image$1 [L]
+
+    # Handle API routes
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteRule ^api/(.*)$ /api/$1 [L,QSA,END]
+
+    # Handle public files
+    RewriteCond %{REQUEST_URI} ^/public/
+    RewriteRule ^public/(.*)$ /public/$1 [L]
+
+    # Handle images directory
+    RewriteCond %{REQUEST_URI} ^/images/
+    RewriteRule ^images/(.*)$ /images/$1 [L]
+
+    # Prevent direct access to sensitive files
+    RewriteRule ^(\.env|package\.json|package-lock\.json|yarn\.lock|\.git) - [F,L]
+    RewriteRule ^server\.js$ - [F,L]
+
+    # Handle all other routes - send to server.js
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /server.js [L,QSA]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    # CORS Headers
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+    Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    Header set Access-Control-Allow-Credentials "true"
+
+    # Security Headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+</IfModule>
+
+# Cache Control
+<FilesMatch "\.(jpg|jpeg|png|gif|ico|css|js|woff2?|svg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# Cache Control for Next.js build files
+<FilesMatch "^_next/static/.*$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes
+
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css text/javascript application/xml application/xhtml+xml application/rss+xml application/javascript application/x-javascript application/json
+</IfModule>

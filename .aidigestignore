@@ -1,0 +1,7 @@
+.next
+docs
+mode_modules
+.aidigestignore
+.gitignore
+README.md
+package-lock.json
